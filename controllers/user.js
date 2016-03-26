@@ -29,7 +29,6 @@ exports.postLogin = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('/login');
   }
 
@@ -38,14 +37,12 @@ exports.postLogin = function(req, res, next) {
       return next(err);
     }
     if (!user) {
-      req.flash('errors', info);
       return res.redirect('/login');
     }
     req.logIn(user, function(err) {
       if (err) {
         return next(err);
       }
-      req.flash('success', { msg: 'Success! You are logged in.' });
       res.redirect(req.session.returnTo || '/');
     });
   })(req, res, next);
@@ -85,7 +82,6 @@ exports.postSignup = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('/signup');
   }
 
@@ -96,7 +92,6 @@ exports.postSignup = function(req, res, next) {
 
   User.findOne({ email: req.body.email }, function(err, existingUser) {
     if (existingUser) {
-      req.flash('errors', { msg: 'Account with that email address already exists.' });
       return res.redirect('/signup');
     }
     user.save(function(err) {
@@ -133,7 +128,6 @@ exports.postUpdateProfile = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('/account');
   }
 
@@ -149,13 +143,11 @@ exports.postUpdateProfile = function(req, res, next) {
     user.save(function(err) {
       if (err) {
         if (err.code === 11000) {
-          req.flash('errors', { msg: 'The email address you have entered is already associated with an account.' });
           return res.redirect('/account');
         } else {
           return next(err);
         }
       }
-      req.flash('success', { msg: 'Profile information updated.' });
       res.redirect('/account');
     });
   });
@@ -172,7 +164,6 @@ exports.postUpdatePassword = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('/account');
   }
 
@@ -185,7 +176,6 @@ exports.postUpdatePassword = function(req, res, next) {
       if (err) {
         return next(err);
       }
-      req.flash('success', { msg: 'Password has been changed.' });
       res.redirect('/account');
     });
   });
@@ -201,30 +191,10 @@ exports.postDeleteAccount = function(req, res, next) {
       return next(err);
     }
     req.logout();
-    req.flash('info', { msg: 'Your account has been deleted.' });
     res.redirect('/');
   });
 };
 
-/**
- * GET /account/unlink/:provider
- * Unlink OAuth provider.
- */
-exports.getOauthUnlink = function(req, res, next) {
-  var provider = req.params.provider;
-  User.findById(req.user.id, function(err, user) {
-    if (err) {
-      return next(err);
-    }
-    user[provider] = undefined;
-    user.tokens = _.reject(user.tokens, function(token) { return token.kind === provider; });
-    user.save(function(err) {
-      if (err) return next(err);
-      req.flash('info', { msg: provider + ' account has been unlinked.' });
-      res.redirect('/account');
-    });
-  });
-};
 
 /**
  * GET /reset/:token
@@ -242,7 +212,6 @@ exports.getReset = function(req, res, next) {
         return next(err);
       }
       if (!user) {
-        req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
         return res.redirect('/forgot');
       }
       res.render('account/reset', {
@@ -262,7 +231,6 @@ exports.postReset = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('back');
   }
 
@@ -276,7 +244,6 @@ exports.postReset = function(req, res, next) {
             return next(err);
           }
           if (!user) {
-            req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
             return res.redirect('back');
           }
           user.password = req.body.password;
@@ -308,7 +275,6 @@ exports.postReset = function(req, res, next) {
           'This is a confirmation that the password for your account ' + user.email + ' has just been changed.\n'
       };
       transporter.sendMail(mailOptions, function(err) {
-        req.flash('success', { msg: 'Success! Your password has been changed.' });
         done(err);
       });
     }
@@ -343,7 +309,6 @@ exports.postForgot = function(req, res, next) {
   var errors = req.validationErrors();
 
   if (errors) {
-    req.flash('errors', errors);
     return res.redirect('/forgot');
   }
 
@@ -357,7 +322,6 @@ exports.postForgot = function(req, res, next) {
     function(token, done) {
       User.findOne({ email: req.body.email.toLowerCase() }, function(err, user) {
         if (!user) {
-          req.flash('errors', { msg: 'No account with that email address exists.' });
           return res.redirect('/forgot');
         }
         user.passwordResetToken = token;
@@ -385,7 +349,6 @@ exports.postForgot = function(req, res, next) {
           'If you did not request this, please ignore this email and your password will remain unchanged.\n'
       };
       transporter.sendMail(mailOptions, function(err) {
-        req.flash('info', { msg: 'An e-mail has been sent to ' + user.email + ' with further instructions.' });
         done(err, 'done');
       });
     }

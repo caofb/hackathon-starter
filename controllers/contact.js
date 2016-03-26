@@ -1,15 +1,9 @@
-var secrets = require('../config/secrets');
 var nodemailer = require("nodemailer");
-var smtpTransport = nodemailer.createTransport('SMTP', {
-//  service: 'Mailgun',
-//  auth: {
-//    user: secrets.mailgun.login,
-//    pass: secrets.mailgun.password
-//  }
+var transporter = nodemailer.createTransport({
   service: 'SendGrid',
   auth: {
-       user: secrets.sendgrid.user,
-       pass: secrets.sendgrid.password
+    user: process.env.SENDGRID_USER,
+    pass: process.env.SENDGRID_PASSWORD
   }
 });
 
@@ -17,7 +11,6 @@ var smtpTransport = nodemailer.createTransport('SMTP', {
  * GET /contact
  * Contact form page.
  */
-
 exports.getContact = function(req, res) {
   res.render('contact', {
     title: 'Contact'
@@ -27,11 +20,7 @@ exports.getContact = function(req, res) {
 /**
  * POST /contact
  * Send a contact form via Nodemailer.
- * @param email
- * @param name
- * @param message
  */
-
 exports.postContact = function(req, res) {
   req.assert('name', 'Name cannot be blank').notEmpty();
   req.assert('email', 'Email is not valid').isEmail();
@@ -57,7 +46,7 @@ exports.postContact = function(req, res) {
     text: body
   };
 
-  smtpTransport.sendMail(mailOptions, function(err) {
+  transporter.sendMail(mailOptions, function(err) {
     if (err) {
       req.flash('errors', { msg: err.message });
       return res.redirect('/contact');

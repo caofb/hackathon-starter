@@ -15,7 +15,7 @@ block content
       | API Console
     a.btn.btn-primary(href='https://developer.venmo.com/docs/endpoints/payments', target='_blank')
       i.fa.fa-code-fork
-      | API Endspoints
+      | API Endpoints
 
   h3 Venmo Profile
   .row
@@ -42,7 +42,7 @@ block content
     .col-sm-5
       h3 Make Payment
       form(role='form', method='POST')
-        input(type='hidden', name='_csrf', value=token)
+        input(type='hidden', name='_csrf', value=_csrf)
         .form-group
           label.control-label(for='user') Phone, Email or Venmo User ID
           input.form-control(type='text', name='user', id='user', placeholder='15555555555', autofocus=true)
